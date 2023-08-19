@@ -31,8 +31,7 @@ An "operating system" written in C, which can port to any C compiler which longj
 或者加上“-D_FORTIFY_SOURCE=0”解决.
 
 ```
-*** longjmp causes uninitialized stack frame ***: terminated
-Aborted (core dumped)
+-D_FORTIFY_SOURCE=0
 ```
 
 
