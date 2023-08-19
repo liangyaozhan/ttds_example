@@ -1,5 +1,5 @@
 # ttds_example
-An "operating system" writen in C, which can port to any C compiler which longjmp is supported.
+An "operating system" written in C, which can port to any C compiler which longjmp is supported.
 使用longjmp实现的一个“操作系统”，也许叫协程更合适一点。
 
 # 原理
