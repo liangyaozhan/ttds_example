@@ -17,14 +17,16 @@ An "operating system" writen in C, which can port to any C compiler which longjm
 * setjmp保存了所有寄存器，longjmp恢复了所有寄存器
 
 # 特性
-* 方便移植，任意支持setjmp/longjmp的C编译器都应该支持(目前已知MSVC-64位不支持，似乎是因为64bit模式下结栈的完整性有检查，所以无法支持.)
-* 支持semaphore/condition_variable
-* 支持mutex
-* 不关中断。所以，可以认为中断响应很快
+* 便于移植。本项目基于 setjmp/longjmp 指令，编译器普遍支持。
+* 支持信号量。
+* 支持互斥量。
+* 无需关闭中断，不影响中断的响应。
 * 无优先级，排队执行. 以协程为目的，个人认为不需要优先级
-* 单文件实现，还是需要定义函数body的，通过定义DEF_MYPT_C_FUNCTION_BODY后包含
-* 线程池API  这是受实现原理所限制，目前想到最好的方案是线程池.
-* 
+* 仅单文件。
+
+# 目前的问题：
+ * MSVC-64 对于 setjmp/longjmp 指令的支持不佳。
+
 # 命名空间
 这里是指标识符的前缀。
 程序里反复修改了多次命名空间，最终决定使用输入方便的ttds作为“命名空间”，即所以标识符前都加ttds，因此，并无实际含义。
