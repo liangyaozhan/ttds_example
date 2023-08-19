@@ -32,6 +32,17 @@ An "operating system" written in C, which can port to any C compiler which longj
 
 # how to use
 
+### 修改主线程的栈大小
+以msvc为例子，默认大小是1MB，要修改栈大小，可以使用参数"/stack"修改，如改为5MB的连接参数为：
+* MSVC win32
+```
+/stack:0x500000
+```
+* gcc for pc
+```
+-Wl,--stack,0x500000
+```
+
 ### 定义一次函数体，通过定义宏DEF_MYPT_C_FUNCTION_BODY来实现。
 ```
 #define DEF_MYPT_C_FUNCTION_BODY
