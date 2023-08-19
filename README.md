@@ -18,8 +18,8 @@ An "operating system" writen in C, which can port to any C compiler which longjm
 
 # 特性
 * 方便移植，任意支持setjmp/longjmp的C编译器都应该支持(目前已知MSVC-64位不支持，似乎是因为64bit模式下结栈的完整性有检查，所以无法支持.)
-* 支持信号量/条件变量
-* 支持互拆量
+* 支持semaphore/condition_variable
+* 支持mutex
 * 不关中断。所以，可以认为中断响应很快
 * 无优先级，排队执行. 以协程为目的，个人认为不需要优先级
 * 单文件实现，还是需要定义函数body的，通过定义DEF_MYPT_C_FUNCTION_BODY后包含
