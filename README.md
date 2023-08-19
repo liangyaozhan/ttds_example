@@ -69,7 +69,7 @@ void ttds_threadpool_init(int main_thread_stack_size );
 void ttds_threadpool_add_thread(ttds_cothread_t *p_threads, int count,int stack_size );
 ```
 ### 启动线程池
-注意，这函数会返回，返回后，运行函数是"main"线程.
+注意，这函数会返回，返回后，运行环境是"main"线程.
 ```
 void ttds_threadpool_startup(void);
 ```
