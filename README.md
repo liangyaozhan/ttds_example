@@ -57,6 +57,13 @@ An "operating system" written in C, which can port to any C compiler which longj
 #define DEF_MYPT_C_FUNCTION_BODY
 #include "ttds_cotask.h"
 ```
+
+### 实现ttds_cothread_sys_tick_get_ms()
+需要实现毫秒计时函数ttds_cothread_sys_tick_get_ms
+```
+int32_t ttds_cothread_sys_tick_get_ms(void);
+```
+
 ### 线程池初始化
 参数main_thread_stack_size是main线程的栈保留字节数。
 ```c
@@ -116,7 +123,9 @@ int idle_thread( void *p )
 }
 
 
+static void ticker_init();
 int main(){
+    ticker_init();
     static ttds_cothread_t pool[6];
 
     ttds_threadpool_init( 4096 );
@@ -134,4 +143,17 @@ int main(){
     }
 }
 
+#include <chrono>
+std::chrono::time_point<std::chrono::steady_clock> g_tp_last;
+static void ticker_init()
+{
+    auto now = std::chrono::steady_clock::now();
+    g_tp_last = now;
+}
+int32_t ttds_cothread_sys_tick_get_ms()
+{
+    auto now = std::chrono::steady_clock::now();
+    auto diff_ms = std::chrono::duration_cast<std::chrono::milliseconds>( now - g_tp_last ).count();
+    return (int32_t)diff_ms;
+}
 ```
