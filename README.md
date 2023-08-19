@@ -31,6 +31,32 @@ An "operating system" writen in C, which can port to any C compiler which longjm
 这里是指标识符的前缀。
 程序里反复修改了多次命名空间，最终决定使用输入方便的ttds作为“命名空间”，即所以标识符前都加ttds，因此，并无实际含义。
 
+# how to use
+
+### 定义一次函数体，通过定义宏DEF_MYPT_C_FUNCTION_BODY来实现。
+```
+#define DEF_MYPT_C_FUNCTION_BODY
+#include "ttds_cotask.h"
+```
+### 线程池初始化
+参数main_thread_stack_size是main线程的栈保留字节数。
+```c
+void ttds_threadpool_init(int main_thread_stack_size );
+```
+### 加入指定栈大小的线程对象
+在使用ttds_threadpool_run()之前，需要先加入线程对象。
+注意：线程对象栈大小不可更改。
+```
+void ttds_threadpool_add_thread(ttds_cothread_t *p_threads, int count,int stack_size );
+```
+### 启动线程池
+
+```
+void ttds_threadpool_startup(void);
+```
+
+
+### 完整例子
 ```c++
 
 #define DEF_MYPT_C_FUNCTION_BODY
