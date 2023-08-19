@@ -2,7 +2,7 @@
 An "operating system" writen in C, which can port to any C compiler which longjmp is supported.
 使用longjmp实现的一个“操作系统”，也许叫协程更合适一点。
 # 特性
-* 方便移植，任意支持setjmp/longjmp的C编译器都应该支持(目前已经MSVC-64位不支持，似乎是因为64bit模式下结栈的完整性有检查，所以无法支持.)
+* 方便移植，任意支持setjmp/longjmp的C编译器都应该支持(目前已知MSVC-64位不支持，似乎是因为64bit模式下结栈的完整性有检查，所以无法支持.)
 * 支持信号量/条件变量
 * 支持互拆量
 * 不关中断。所以，可以认为中断响应很快
