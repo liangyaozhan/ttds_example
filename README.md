@@ -27,7 +27,7 @@ An "operating system" written in C, which can port to any C compiler which longj
  * MSVC-64 对于 setjmp/longjmp 指令的支持不佳。
  * linux-gcc longjmp causes uninitialized stack frame
 ### gcc longjmp causes uninitialized stack frame
-在某些发行版上（ubuntu8.10以上，centOS貌似还没这个feature），gcc带优化的情况下，会自动带上FORTIFY_SOURCE编译，这样longjmp在运行时会crash，报错为“longjmp causes uninitialized stack frame”，修复办法为为关闭gcc的FORTIFY_SOURCE特性，增加编译参数“-U_FORTIFY_SOURCE”
+在某些发行版上，gcc带优化的情况下，会自动带上FORTIFY_SOURCE编译，这样longjmp在运行时会crash，报错为“longjmp causes uninitialized stack frame”，修复办法为为关闭gcc的FORTIFY_SOURCE特性，增加编译参数“-U_FORTIFY_SOURCE”
 或者加上“-D_FORTIFY_SOURCE=0”解决.
 
 ```
