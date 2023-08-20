@@ -82,7 +82,7 @@ void ttds_threadpool_startup(void);
 ```
 
 
-# 使用标准C++11环境的完整例子
+# 标准C++11环境的完整例子
 ```c++
 
 #define DEF_MYPT_C_FUNCTION_BODY
