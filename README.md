@@ -159,13 +159,13 @@ int32_t ttds_cothread_sys_tick_get_ms()
 ```
 # STM32例子
 ```C
+#define DEF_MYPT_C_FUNCTION_BODY
+#include "ttds_cotask.h"
+
 int32_t ttds_cothread_sys_tick_get_ms()
 {
 	return (int32_t)HAL_GetTick();
 }
-
-#define DEF_MYPT_C_FUNCTION_BODY
-#include "ttds_cotask.h"
 
 int stack_used(){
     ttds_cothread_t *ptr = ttds_cothread_self();
