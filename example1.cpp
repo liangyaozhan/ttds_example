@@ -113,8 +113,9 @@ int main(int argc, char **argv)
 
     static ttds_cothread_t pool[6];
 
-    ttds_threadpool_init( 4096 );
-    ttds_threadpool_add_thread( pool, 6, 4096);
+    ttds_threadpool_init( 8192 );
+    ttds_threadpool_add_thread( pool, 6, 8192);
+    ttds_threadpool_startup();
 
     ttds_cosem_init( &g_sem, 0 );
 
@@ -122,7 +123,6 @@ int main(int argc, char **argv)
     ttds_threadpool_run( entry_a, 0, 2000, "TaskA" );
     ttds_threadpool_run( entry_b, 0, 2000, "TaskB" );
 
-    ttds_threadpool_startup();
     ttds_threadpool_default()->enable_stack_check = 0;
     while (1){
         #if 1
@@ -149,8 +149,6 @@ static void ticker_init()
     auto now = std::chrono::steady_clock::now();
     g_tp_last = now;
 }
-
-int32_t g_ms_offset = 0;
 int32_t ttds_cothread_sys_tick_get_ms()
 {
     auto now = std::chrono::steady_clock::now();

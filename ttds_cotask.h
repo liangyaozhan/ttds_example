@@ -63,7 +63,9 @@
 #ifndef ttds_QUEUE_H
 #define ttds_QUEUE_H
 
-#include <assert.h>
+#ifndef ttds_assert 
+#define ttds_assert(x)
+#endif
 
 #ifdef __cplusplus
 extern "C"
@@ -102,7 +104,7 @@ extern "C"
 #define ttds_queue_insert_tail(h, x)                                                     \
     do                                                                                    \
     {                                                                                     \
-        assert((x)->next == (x)->prev && (x)->next == (x) && "insert twice or not init"); \
+        ttds_assert((x)->next == (x)->prev && (x)->next == (x) && "insert twice or not init"); \
         (x)->prev = (h)->prev;                                                            \
         (x)->prev->next = x;                                                              \
         (x)->next = h;                                                                    \
@@ -301,7 +303,6 @@ extern "C"
 
 #include <stdint.h>
 #include <setjmp.h>
-#include <assert.h>
 
 
 #define ttds_coCPLUSPLUS_BEGIN \
@@ -316,7 +317,7 @@ ttds_coCPLUSPLUS_BEGIN
 /************************************************** ttds_cothread_t ***************************************/
 /************************************************** ttds_cothread_t ***************************************/
 
-#define ttds_assert(c) assert( (c) )
+#define ttds_assert(c) do{ ;}while(0)
 
 #define ttds_coWAITING 0
 #define ttds_coYIELDED 1
@@ -486,7 +487,6 @@ ttds_coCPLUSPLUS_END
 
 #include <assert.h>
 #include <string.h>
-#include <stdio.h>
 
 
 #ifndef NULL
@@ -504,8 +504,8 @@ static void ttds_cothread_yeild_do(ttds_cothread_t *p_this);
 static void ttds_cothread_make_ready(ttds_cothread_t *p_thread);
 static void ttds_threadpool_make_ready(ttds_threadpool_t *p_this, ttds_cothread_t *p_thread);
 static void __stack_clear( ttds_cothread_t *p_this, int index, char *parent );
-
-void ttds_threadpool_thread_delay(ttds_threadpool_t *p_this, ttds_cothread_t *p_thread, int tick);
+static void cthread_stack_extend( ttds_cothread_t *p_this, int index, base_reg_t *parent);
+void ttds_cothread_first_thread_init( ttds_cothread_t *p_thread, int stack_size );
 
 static void ttds_cotimeout_cb__(ttds_timer_t *p_timer, void *arg){
     ttds_cothread_t *p_thread = (ttds_cothread_t*)arg;
@@ -530,7 +530,6 @@ static void ttds_cothread_make_ready(ttds_cothread_t *p_thread)
     ttds_threadpool_make_ready(p_loop, p_thread);
 }
 
-static void cthread_stack_extend( ttds_cothread_t *p_this, int index, base_reg_t *parent);
 void ttds_cothread_startup(ttds_cothread_t *p_thread )
 {
     ttds_threadpool_t *p_loop = ttds_threadpool_default();
@@ -550,7 +549,9 @@ void ttds_cothread_startup(ttds_cothread_t *p_thread )
 void ttds_threadpool_startup(void)
 {
     ttds_threadpool_t *p_this = ttds_threadpool_default();
-    int ret = setjmp(p_this->main.jb);
+    int ret;
+    p_this->systick = ttds_cothread_sys_tick_get_ms();
+    ret = setjmp(p_this->main.jb);
     if (ret == 0){
         ttds_threadpool_run_ready_internal();
         return ;
@@ -558,8 +559,6 @@ void ttds_threadpool_startup(void)
     p_this->enable_stack_check = 0;
     p_this->main.stack_check = (char*)&p_this;
     __stack_clear( &p_this->main, -2, NULL );
-    int used = ttds_cothread_get_stack_used(NULL);
-    //printf("startup stack used:%d main.check=%p\n", used, p_this->main.stack_check );
 }
 
 static void ttds_threadpool_run_ready_internal(void)
@@ -583,10 +582,6 @@ static void ttds_threadpool_run_ready_internal(void)
                 old->stack_check = p;
             }
             int diff = old->stack_check - old->stack_low;
-            /*
-            if ( diff <= 0){
-                printf("%s@%p diff = %d (%p, %p) %p\n", old->name, old, diff, old->stack_low, old->stack_high, old->stack_check );
-            }*/
             ttds_assert( diff > sizeof(char*)*16 && "stack overflow!" );
         } else {
             if (old->stack_check < (char *)&p_this){
@@ -598,9 +593,6 @@ static void ttds_threadpool_run_ready_internal(void)
                 old->stack_check = p;
             }
             int diff = old->stack_high - old->stack_check;
-            if ( diff <= 0){
-                printf("%s@%p diff = %d (%p, %p) %p\n", old->name, old, diff, old->stack_low, old->stack_high, old->stack_check );
-            }
             ttds_assert( diff > sizeof(char*)*16 && "stack overflow!" );
         }
     }
@@ -635,11 +627,6 @@ int ttds_cothread_get_stack_used(ttds_cothread_t *ptr )
             ptr->stack_check = p;
         }
         int diff = ptr->stack_high - ptr->stack_check;
-        /*
-        if ( diff <= 0){
-            printf("%s@%p diff = %d (%p, %p) %p\n", ptr->name, ptr, diff, ptr->stack_low, ptr->stack_high, ptr->stack_check );
-        }
-        */
         ttds_assert(diff > 0 && "stack overflow!");
         return diff;
     } else {
@@ -652,21 +639,14 @@ int ttds_cothread_get_stack_used(ttds_cothread_t *ptr )
         ttds_assert(diff > 0 && "stack overflow!");
         return diff >=0 ? diff: -diff;
     }
-
 }
-void ttds_threadpool_init(int main_thread_stack_size)
+
+void ttds_cothread_first_thread_init( ttds_cothread_t *p_thread, int stack_size )
 {
     ttds_threadpool_t *p_this = ttds_threadpool_default();
-    ttds_cothread_t *p_thread = &p_this->main;
     int ret;
 
-    memset(p_this, 0x00, sizeof(*p_this));
-    ttds_queue_init(&p_this->head_state_pending);
-    ttds_queue_init(&p_this->head_state_running);
-    ttds_tick_init( &p_this->ticker);
-    p_this->systick = ttds_cothread_sys_tick_get_ms();
-    p_this->p_thread_current = NULL;
-    ttds_cothread_init( p_thread, main_thread_stack_size );
+    ttds_cothread_init( p_thread, stack_size );
     p_thread->name = "main";
     ttds_threadpool_add(p_thread);
     ret = setjmp( p_this->jb_create_thread_res );
@@ -679,6 +659,19 @@ void ttds_threadpool_init(int main_thread_stack_size)
         p_this->main.stack_high = (char*)&p_this;
     }
     ttds_cothread_make_ready(&p_this->main);
+}
+
+
+void ttds_threadpool_init(int main_thread_stack_size)
+{
+    ttds_threadpool_t *p_this = ttds_threadpool_default();
+
+    memset(p_this, 0x00, sizeof(*p_this));
+    ttds_queue_init(&p_this->head_state_pending);
+    ttds_queue_init(&p_this->head_state_running);
+    ttds_tick_init( &p_this->ticker);
+    p_this->p_thread_current = NULL;
+    ttds_cothread_first_thread_init( &p_this->main, main_thread_stack_size );
 }
 
 void ttds_threadpool_add_thread(ttds_cothread_t *p_threads, int count,int main_thread_stack_size )
@@ -993,7 +986,10 @@ static void ttds_threadpool_at_stack_bottom( int index)
         ttds_threadpool_t *p_this = ttds_threadpool_default();
         int ret = setjmp(p_this->jb_create_thread_req);
         if (ret){
-            p_this = ttds_threadpool_default();
+            if ( p_this != ttds_threadpool_default() ){
+                ttds_assert( 0 && "stack overflow!");
+                while (1){}
+            }
             cthread_stack_extend( p_this->p_thread_to_init_stack, -1, 0 );
             ttds_assert( 0 && "never return");
             while (1){
@@ -1024,16 +1020,13 @@ static void cthread_stack_extend( ttds_cothread_t *p_this, int index, base_reg_t
             p_this->stack_low = (char*)parent;
             p_this->stack_high= (char*)&ptr;
             p_this->stack_check = p_this->stack_low;
-            //printf("going UP thread %s stack addr:%p -> %p s:%d %d index=%d\n", p_this->name, ptr, parent, stack_size, p_this->stack_size, index );
         } else {/* goging down */
             p_this->stack_low = (char*)&ptr;
             p_this->stack_high= (char*)parent;
             p_this->stack_check = p_this->stack_high;
-            //printf("going DOWN thread %s stack addr:%p -> %p s:%d %d index=%d\n", p_this->name, ptr, parent, stack_size, p_this->stack_size, index );
         }
         stack_size *= sizeof(base_reg_t);
         if (stack_size >= p_this->stack_size ){
-            /*printf("thread %s stack addr:%p -> %p s:%d %d index=%d\n", p_this->name, ptr, parent, stack_size, p_this->stack_size, index );*/
             if ( parent > ptr){
                 ttds_threadpool_default()->is_stack_going_down = 1;
             }
